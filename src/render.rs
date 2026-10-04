@@ -12,6 +12,27 @@ struct Vertex {
     normal: [f32; 3],
     uv: [f32; 2],
 }
+const PIECE_MESHES: [&[u8]; 6] = [
+    include_bytes!("../assets/pawn.mesh"),
+    include_bytes!("../assets/knight.mesh"),
+    include_bytes!("../assets/bishop.mesh"),
+    include_bytes!("../assets/rook.mesh"),
+    include_bytes!("../assets/queen.mesh"),
+    include_bytes!("../assets/king.mesh"),
+];
+
+fn piece_vertices(bytes: &[u8]) -> impl Iterator<Item = Vertex> + '_ {
+    assert_eq!(bytes.len() % (3 * std::mem::size_of::<Vertex>()), 0);
+    bytes.as_chunks::<32>().0.iter().map(|chunk| {
+        let words = chunk.as_chunks::<4>().0;
+        let f: [f32; 8] = std::array::from_fn(|i| f32::from_le_bytes(words[i]));
+        Vertex {
+            position: f[0..3].try_into().unwrap(),
+            normal: f[3..6].try_into().unwrap(),
+            uv: f[6..8].try_into().unwrap(),
+        }
+    })
+}
 #[derive(Clone, Copy, Pod, Zeroable)]
 #[repr(C)]
 struct Instance {
@@ -211,28 +232,9 @@ impl BoardRenderer {
     pub fn new(device: wgpu::Device, queue: wgpu::Queue, adapter_name: String) -> Self {
         let mut vertices = Vec::new();
         let mut meshes = Vec::new();
-        for bytes in [
-            include_bytes!("../assets/pawn.mesh").as_slice(),
-            include_bytes!("../assets/knight.mesh").as_slice(),
-            include_bytes!("../assets/bishop.mesh").as_slice(),
-            include_bytes!("../assets/rook.mesh").as_slice(),
-            include_bytes!("../assets/queen.mesh").as_slice(),
-            include_bytes!("../assets/king.mesh").as_slice(),
-        ] {
+        for bytes in PIECE_MESHES {
             let start = vertices.len() as u32;
-            for chunk in bytes.as_chunks::<32>().0 {
-                let f: Vec<f32> = chunk
-                    .as_chunks::<4>()
-                    .0
-                    .iter()
-                    .map(|v| f32::from_le_bytes(*v))
-                    .collect();
-                vertices.push(Vertex {
-                    position: f[0..3].try_into().unwrap(),
-                    normal: f[3..6].try_into().unwrap(),
-                    uv: f[6..8].try_into().unwrap(),
-                });
-            }
+            vertices.extend(piece_vertices(bytes));
             meshes.push(Mesh {
                 start,
                 count: vertices.len() as u32 - start,
@@ -733,7 +735,9 @@ impl BoardRenderer {
                 mesh,
                 pos,
                 Vec3::ONE,
-                if piece.color == Color::Black {
+                if (piece.role == Role::Knight && piece.color == Color::Black)
+                    || (piece.role == Role::Bishop && piece.color == Color::White)
+                {
                     std::f32::consts::PI
                 } else {
                     0.0
@@ -1013,12 +1017,12 @@ fn texture_bytes() -> Vec<&'static [u8]> {
         asset!("Grass/WhiteBoard.png"),
         asset!("Grass/BlackBoard.png"),
         asset!("Grass/Border.png"),
-        asset!("Wood/WhitePiece.png"),
-        asset!("Wood/BlackPiece.png"),
-        asset!("Marble/WhitePiece.png"),
-        asset!("Marble/BlackPiece.png"),
-        asset!("Metal/WhitePiece.png"),
-        asset!("Metal/BlackPiece.png"),
+        include_bytes!("../Resources/MTL/PiecesWhite/WhitePieceWood.jpg"),
+        include_bytes!("../Resources/MTL/PiecesBlack/BlackPieceWood.jpg"),
+        include_bytes!("../Resources/MTL/PiecesWhite/WhitePieceMarble.jpg"),
+        include_bytes!("../Resources/MTL/PiecesBlack/BlackPieceMarble.jpg"),
+        include_bytes!("../Resources/MTL/PiecesWhite/WhitePieceMetal.jpg"),
+        include_bytes!("../Resources/MTL/PiecesBlack/BlackPieceMetal.jpg"),
         asset!("Fur/WhitePiece.png"),
         asset!("Fur/BlackPiece.png"),
     ]
@@ -1060,6 +1064,40 @@ fn scene_bind(
 mod tests {
     use super::*;
     use crate::game::Rules;
+    #[test]
+    fn piece_meshes_have_valid_shading_and_fit_board_squares() {
+        for (bytes, height) in PIECE_MESHES
+            .into_iter()
+            .zip([1.11, 1.53, 1.62, 1.15, 1.90, 2.10])
+        {
+            let mut min = Vec3::splat(f32::INFINITY);
+            let mut max = Vec3::splat(f32::NEG_INFINITY);
+            for vertex in piece_vertices(bytes) {
+                let position = Vec3::from_array(vertex.position);
+                let normal = Vec3::from_array(vertex.normal);
+                assert!(position.is_finite());
+                assert!(normal.is_finite());
+                assert!((normal.length() - 1.0).abs() < 0.001);
+                // The supplied queen UVs extend slightly past the texture
+                // edge; the repeating sampler handles this authored seam.
+                assert!(
+                    vertex
+                        .uv
+                        .into_iter()
+                        .all(|uv| (-0.001..=1.001).contains(&uv))
+                );
+                min = min.min(position);
+                max = max.max(position);
+            }
+            // Catches a lost stage rotation, incorrect model scale, or a
+            // truncated conversion that drops a piece's head or base.
+            assert!(min.x > -0.5 && max.x < 0.5);
+            assert!(min.z > -0.5 && max.z < 0.5);
+            assert!(min.y.abs() < 0.0001);
+            assert!((max.y - height).abs() < 0.01);
+        }
+    }
+
     #[test]
     fn camera_projects_and_picks_both_sides() {
         let game = Game::new(Rules::Standard);

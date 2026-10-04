@@ -5,7 +5,7 @@ New Rust application code: GNU GPL version 3 or later (LICENSE).
 The original Apple Chess frontend source, icons, textures and piece geometry,
 including the derived assets/*.mesh triangle buffers, retain the Apple Sample
 Code License and copyright notices in README and Sources/*. The conversion
-script derives the geometry from Sources/MBCBoardViewModels.mm.
+script derives the geometry from Resources/Meshes/*.usdc.
 
 The original Sjeng engine, retained in sjeng/ and optionally run as a separate
 process, is copyright Gian-Carlo Pascutto and contributors, licensed under GNU

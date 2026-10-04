@@ -34,7 +34,7 @@ Install the binary, desktop launcher, icon, MIME types and documentation into `~
 | Standard, Crazyhouse, Suicide and Losers | Rust rules, including compulsory legal captures, drops, castling, en passant, all legal promotions, checkmate and draw detection |
 | Human/computer combinations | Human versus human, either computer side, and computer versus computer; adjustable thinking time/depth and pause/resume |
 | Original computer engine | Optional separate Sjeng process, preserving the supplied search, opening books and on-disk learning |
-| Interactive 3D board | Vulkan triangle renderer, original OpenGL piece geometry and supplied textures, GGX specular lighting, planar reflections, contact shadows, 4× MSAA, movement animation, mouse picking and dragging |
+| Interactive 3D board | Vulkan triangle renderer, original Metal piece geometry and supplied textures, GGX specular lighting, planar reflections, contact shadows, 4× MSAA, movement animation, mouse picking and dragging |
 | Board and piece appearance | Wood, Marble, Metal and Grass boards; Wood, Marble, Metal and Fur pieces; independent styles, camera angle, rotation and zoom |
 | Material and lighting tuning | Live controls for five materials, light position, ambient light, board reflectivity and notation brightness; saved preferences |
 | Game log and hints | SAN history, last-move and hint overlays, review navigation, undo/redo, comments and saved alternative continuations |
@@ -161,6 +161,6 @@ The Vulkan render and native GUI have been exercised on an NVIDIA GeForce RTX 40
 - `src/render.rs`, `src/board.wgsl`: Vulkan board renderer and shaders.
 - `src/app.rs`: native desktop application.
 - `src/network.rs`, `src/speech.rs`, `src/recording.rs`, `src/automation.rs`: Linux integrations.
-- `assets/*.mesh`: portable triangle buffers derived from the supplied OpenGL geometry. Regenerate with `python scripts/convert_meshes.py`.
+- `assets/*.mesh`: portable triangle buffers derived from the supplied Metal/USD geometry, preserving normals and texture coordinates. Regeneration requires the OpenUSD Python bindings (`pip install usd-core`), then `python scripts/convert_meshes.py`. Normal builds need no USD tools.
 
 New Rust application code is GPL-3.0-or-later, compatible with the GPL-3.0-or-later [shakmaty](https://github.com/niklasf/shakmaty) rules library. Original artwork, geometry and frontend source retain the Apple Sample Code License in the root `README`; original Sjeng retains `sjeng/COPYING`. See `NOTICE` and `LICENSE`. This port is not endorsed by Apple.
