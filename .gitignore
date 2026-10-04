@@ -2,3 +2,4 @@
 /artifacts/
 *.chess-linux
 __pycache__/
+/dist/

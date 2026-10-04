@@ -4,7 +4,7 @@ A native Linux rebuild of Apple's Chess application, written in **Rust** with a 
 
 ![Chess for Linux showing a wooden 3D board, move history, and the opening moves e4 and e5](docs/images/chess-3d.png)
 
-[Getting started](#getting-started) · [Features](#features) · [Screenshots](#screenshots) · [Controls](#controls) · [Linux guide](README.linux.md) · [Licenses](#licenses-and-origin)
+[Getting started](#getting-started) · [Features](#features) · [Screenshots](#screenshots) · [Controls](#controls) · [Linux guide](README.linux.md) · [Browser/WASM guide](README.wasm.md) · [Licenses](#licenses-and-origin)
 
 ## Features
 
@@ -53,6 +53,22 @@ The artwork is embedded in the binary. You can also open a saved game directly o
 This builds the release binary and installs the application, desktop launcher, icon, file associations, and documentation into `~/.local`. Ensure `~/.local/bin` is in your `PATH`. Use `PREFIX=/path ./scripts/install.sh` to choose another installation directory.
 
 See the [Linux guide](README.linux.md) for optional dependencies, file compatibility, networking, scripting, and verification details.
+
+## Browser build (WebAssembly)
+
+The same Rust rules, engine and 3D artwork also run in a browser with WebGPU or
+WebGL2. Install Rust with rustup and Trunk, then run:
+
+```sh
+rustup target add wasm32-unknown-unknown
+cargo install trunk --locked
+trunk serve --open --locked
+```
+
+Create a static site in `dist/` with `trunk build --release --locked`. The browser
+frontend includes all four variants, computer play, 2D/3D boards, history and
+pasted document import/export. See the [browser guide](README.wasm.md) for
+controls, deployment and platform differences.
 
 ## Screenshots
 

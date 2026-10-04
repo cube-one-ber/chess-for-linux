@@ -919,18 +919,18 @@ impl ChessApp {
                     self.remote_request = Some(r);
                 }
             }
-            Message::Reply { request, accepted } => {
-                if self.pending_request.as_deref() == Some(&request) {
-                    self.pending_request = None;
-                    if accepted {
-                        self.apply_request(&request);
-                    }
-                    self.message = if accepted {
-                        format!("{request} accepted")
-                    } else {
-                        format!("{request} declined")
-                    };
+            Message::Reply { request, accepted }
+                if self.pending_request.as_deref() == Some(&request) =>
+            {
+                self.pending_request = None;
+                if accepted {
+                    self.apply_request(&request);
                 }
+                self.message = if accepted {
+                    format!("{request} accepted")
+                } else {
+                    format!("{request} declined")
+                };
             }
             Message::Result(r) => {
                 let expected = if host { "1-0" } else { "0-1" };

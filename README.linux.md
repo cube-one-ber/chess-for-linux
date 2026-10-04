@@ -2,6 +2,8 @@
 
 A native Rust rebuild of the supplied Apple Chess application. Both the desktop interface and the 3D board render through **Vulkan**, using wgpu. Wayland and X11 are supported. The original source, license notices, piece geometry, and artwork are retained.
 
+A browser WebAssembly target is also available; see [README.wasm.md](README.wasm.md).
+
 ## Build and run
 
 Requires Rust **1.95 or newer**, a C linker, Linux window-system libraries, and a working Vulkan driver/loader. The default application and computer engine are Rust; building Sjeng is optional.

@@ -1,14 +1,24 @@
+#[cfg(not(target_arch = "wasm32"))]
 mod app;
+#[cfg(not(target_arch = "wasm32"))]
 mod automation;
 mod document;
 mod engine;
 mod game;
+#[cfg(not(target_arch = "wasm32"))]
 mod legacy_engine;
+#[cfg(not(target_arch = "wasm32"))]
 mod network;
+#[cfg(not(target_arch = "wasm32"))]
 mod recording;
 mod render;
+#[cfg(not(target_arch = "wasm32"))]
 mod speech;
+#[cfg(target_arch = "wasm32")]
+mod web;
+#[cfg(not(target_arch = "wasm32"))]
 use std::path::PathBuf;
+#[cfg(not(target_arch = "wasm32"))]
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.iter().any(|s| s == "--help" || s == "-h") {
@@ -82,6 +92,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     )?;
     Ok(())
 }
+#[cfg(not(target_arch = "wasm32"))]
 fn render_check(path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
     let instance = wgpu::Instance::new(&wgpu::InstanceDescriptor {
         backends: wgpu::Backends::VULKAN,
@@ -108,4 +119,9 @@ fn render_check(path: PathBuf) -> Result<(), Box<dyn std::error::Error>> {
         path.display()
     );
     Ok(())
+}
+
+#[cfg(target_arch = "wasm32")]
+fn main() {
+    web::start();
 }

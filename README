@@ -1,3 +1,4 @@
+Browser WebAssembly build: see README.wasm.md.
 Linux Rust/Vulkan rebuild: see README.linux.md for build instructions,
 features, compatibility details and verification. The original source and
 license notices follow.

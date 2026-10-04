@@ -4,20 +4,31 @@ version = "0.1.0"
 edition = "2024"
 rust-version = "1.95"
 license = "GPL-3.0-or-later"
-description = "Native Linux chess with a Rust game engine and Vulkan rendering"
+description = "Chess with a Rust game engine, Vulkan on Linux and WebGPU/WebGL in browsers"
 
 [dependencies]
-eframe = { version = "0.33", default-features = false, features = ["default_fonts", "wgpu", "wayland", "x11", "accesskit"] }
-wgpu = { version = "27", default-features = false, features = ["std", "vulkan", "wgsl"] }
 shakmaty = { version = "0.30.1", features = ["variant"] }
 glam = "0.30"
 bytemuck = { version = "1", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 plist = "1"
-pollster = "0.4"
 image = { version = "0.25", default-features = false, features = ["png", "jpeg"] }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+eframe = { version = "0.33", default-features = false, features = ["default_fonts", "wgpu", "wayland", "x11", "accesskit"] }
+wgpu = { version = "27", default-features = false, features = ["std", "vulkan", "wgsl"] }
+pollster = "0.4"
 rfd = { version = "0.15", default-features = false, features = ["xdg-portal", "async-std"] }
+
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+eframe = { version = "0.33", default-features = false, features = ["default_fonts", "wgpu", "persistence"] }
+wgpu = { version = "27", default-features = false, features = ["std", "webgpu", "webgl", "wgsl"] }
+wasm-bindgen = "0.2"
+wasm-bindgen-futures = "0.4"
+web-sys = { version = "0.3", features = ["Document", "Element", "HtmlCanvasElement", "Location", "Window"] }
+web-time = "1"
+log = "0.4"
 
 [profile.release]
 lto = "thin"

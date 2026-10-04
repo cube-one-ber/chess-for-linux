@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Chess in your browser, with four variants and a 3D board.">
+  <title>Chess</title>
+  <!-- Enable the WebAssembly features emitted by current Rust in Trunk's optimizer. -->
+  <link data-trunk rel="rust" data-bin="chess-linux" data-wasm-opt="z" data-wasm-opt-params="--enable-bulk-memory --enable-nontrapping-float-to-int">
+  <style>
+    html, body { margin: 0; width: 100%; height: 100%; overflow: hidden; background: #181c21; color: #eee; font-family: sans-serif; }
+    #chess-canvas { display: block; width: 100%; height: 100%; }
+    #loading { position: absolute; inset: 0; display: grid; place-content: center; padding: 2rem; text-align: center; }
+  </style>
+</head>
+<body>
+  <canvas id="chess-canvas"></canvas>
+  <div id="loading" role="status">Loading Chess…</div>
+  <script>
+    addEventListener('TrunkApplicationFailed', (event) => {
+      document.getElementById('loading').textContent = `Unable to load Chess: ${event.detail?.error ?? 'WebAssembly initialization failed'}`;
+    });
+  </script>
+</body>
+</html>

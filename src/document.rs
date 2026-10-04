@@ -1,18 +1,26 @@
 use crate::game::{Game, Rules, SavedGame};
 use shakmaty::Position;
-use std::{collections::BTreeMap, path::Path};
+use std::collections::BTreeMap;
+#[cfg(not(target_arch = "wasm32"))]
+use std::path::Path;
 
+#[cfg(not(target_arch = "wasm32"))]
 pub fn read(path: &Path) -> Result<Game, String> {
     let bytes = std::fs::read(path).map_err(|e| e.to_string())?;
-    if let Ok(data) = serde_json::from_slice::<SavedGame>(&bytes) {
+    from_bytes(&bytes)
+}
+
+pub fn from_bytes(bytes: &[u8]) -> Result<Game, String> {
+    if let Ok(data) = serde_json::from_slice::<SavedGame>(bytes) {
         return Game::load(data);
     }
-    if let Ok(value) = plist::Value::from_reader(std::io::Cursor::new(&bytes)) {
+    if let Ok(value) = plist::Value::from_reader(std::io::Cursor::new(bytes)) {
         return from_apple(value);
     }
-    let text = String::from_utf8(bytes).map_err(|e| e.to_string())?;
-    from_pgn(&text)
+    let text = std::str::from_utf8(bytes).map_err(|e| e.to_string())?;
+    from_pgn(text)
 }
+#[cfg(not(target_arch = "wasm32"))]
 pub fn write(path: &Path, game: &Game) -> Result<(), String> {
     let ext = path.extension().and_then(|s| s.to_str()).unwrap_or("");
     let bytes = if ext.eq_ignore_ascii_case("pgn") {
@@ -362,7 +370,7 @@ fn from_apple(value: plist::Value) -> Result<Game, String> {
     }
     Ok(g)
 }
-fn to_apple(g: &Game) -> plist::Value {
+pub fn to_apple(g: &Game) -> plist::Value {
     let mut d = plist::Dictionary::new();
     for (k, v) in &g.data.headers {
         d.insert(k.clone(), plist::Value::String(v.clone()));
@@ -455,6 +463,32 @@ fn to_apple(g: &Game) -> plist::Value {
 mod tests {
     use super::*;
     #[test]
+    fn imports_document_bytes_without_a_filesystem() {
+        for rules in Rules::ALL {
+            let mut game = Game::new(rules);
+            let m = game.board.parse_move("e2e4").unwrap();
+            game.push(m).unwrap();
+            game.data.comments.insert(1, "Browser import".into());
+            let mut xml = Vec::new();
+            to_apple(&game).to_writer_xml(&mut xml).unwrap();
+            let mut binary = Vec::new();
+            to_apple(&game).to_writer_binary(&mut binary).unwrap();
+            for bytes in [
+                serde_json::to_vec(&game.data).unwrap(),
+                to_pgn(&game).into_bytes(),
+                xml,
+                binary,
+            ] {
+                let loaded = from_bytes(&bytes).unwrap();
+                assert_eq!(loaded.data.rules, rules);
+                assert_eq!(loaded.board.fen(), game.board.fen());
+                assert_eq!(loaded.data.comments[&1], "Browser import");
+            }
+        }
+        assert!(from_bytes(&[0xff, 0xfe]).is_err());
+    }
+
+    #[test]
     fn pgn_comments_and_variations() {
         let g =
             from_pgn("[Event \"Test\"]\n\n1.e4 {hi} e5 (1... c5 (2.Nf3)) 2. Nf3 Nc6 *").unwrap();
@@ -540,6 +574,7 @@ mod compatibility_tests {
         assert_eq!(g.board.fen(), h.board.fen());
         assert_eq!(h.data.comments[&1], "Custom start");
     }
+    #[cfg(not(target_arch = "wasm32"))]
     #[test]
     fn export_native_apple_and_pgn_files() {
         let dir = std::env::temp_dir().join(format!("chess-files-{}", std::process::id()));

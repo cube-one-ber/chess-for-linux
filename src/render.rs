@@ -847,6 +847,7 @@ impl BoardRenderer {
         }
         self.queue.submit([encoder.finish()]);
     }
+    #[cfg(not(target_arch = "wasm32"))]
     pub fn save_png(&self, path: &std::path::Path) -> Result<(), String> {
         let row = (self.size[0] * 4).div_ceil(256) * 256;
         let buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
