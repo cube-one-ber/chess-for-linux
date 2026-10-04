@@ -66,6 +66,11 @@ pub enum Command {
         accepted: bool,
     },
     Resign,
+    Action {
+        name: String,
+        #[serde(default)]
+        data: Value,
+    },
     Quit,
 }
 pub struct Request {

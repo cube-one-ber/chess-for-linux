@@ -1,6 +1,14 @@
 Chess for Linux
 
-New Rust application code: GNU GPL version 3 or later (LICENSE).
+New Rust application, QML interface and Qt bridge code: GNU GPL version 3 or
+later (LICENSE).
+
+Bundled Noto Sans and Noto Serif fonts are copyright 2022 The Noto Project
+Authors (https://github.com/notofonts/latin-greek-cyrillic), licensed under the
+SIL Open Font License version 1.1. See assets/fonts/LICENSE.
+
+Qt, KDE Kirigami and the KDE desktop controls style are system dependencies;
+they retain their upstream licenses and are not bundled into this repository.
 
 The original Apple Chess frontend source, icons, textures and piece geometry,
 including the derived assets/*.mesh triangle buffers, retain the Apple Sample

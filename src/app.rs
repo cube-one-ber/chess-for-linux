@@ -21,18 +21,18 @@ use std::{
 
 #[derive(Clone, serde::Serialize, serde::Deserialize)]
 #[serde(default)]
-struct Preferences {
-    view: View,
-    seconds: f32,
-    depth: u8,
-    speak_computer: bool,
-    speak_human: bool,
-    voices: [String; 2],
-    model: String,
-    sjeng_path: String,
-    recent: Vec<PathBuf>,
-    show_log: bool,
-    engine_log: bool,
+pub(crate) struct Preferences {
+    pub(crate) view: View,
+    pub(crate) seconds: f32,
+    pub(crate) depth: u8,
+    pub(crate) speak_computer: bool,
+    pub(crate) speak_human: bool,
+    pub(crate) voices: [String; 2],
+    pub(crate) model: String,
+    pub(crate) sjeng_path: String,
+    pub(crate) recent: Vec<PathBuf>,
+    pub(crate) show_log: bool,
+    pub(crate) engine_log: bool,
 }
 impl Default for Preferences {
     fn default() -> Self {
@@ -52,19 +52,19 @@ impl Default for Preferences {
     }
 }
 #[derive(Clone)]
-struct Session {
-    game: Game,
-    path: Option<PathBuf>,
-    dirty: bool,
+pub(crate) struct Session {
+    pub(crate) game: Game,
+    pub(crate) path: Option<PathBuf>,
+    pub(crate) dirty: bool,
 }
 #[derive(serde::Serialize, serde::Deserialize)]
-struct Recovery {
-    games: Vec<SavedGame>,
+pub(crate) struct Recovery {
+    pub(crate) games: Vec<SavedGame>,
     #[serde(default)]
-    paths: Vec<Option<PathBuf>>,
+    pub(crate) paths: Vec<Option<PathBuf>>,
     #[serde(default)]
-    dirty: Vec<bool>,
-    active: usize,
+    pub(crate) dirty: Vec<bool>,
+    pub(crate) active: usize,
 }
 enum FileAction {
     Open(PathBuf),
@@ -139,7 +139,7 @@ pub struct ChessApp {
     smoke_step: usize,
     smoke_started: Instant,
 }
-fn config_dir() -> PathBuf {
+pub(crate) fn config_dir() -> PathBuf {
     std::env::var_os("XDG_CONFIG_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| {
@@ -147,7 +147,7 @@ fn config_dir() -> PathBuf {
         })
         .join("chess-linux")
 }
-fn state_dir() -> PathBuf {
+pub(crate) fn state_dir() -> PathBuf {
     std::env::var_os("XDG_STATE_HOME")
         .map(PathBuf::from)
         .unwrap_or_else(|| {
@@ -2122,6 +2122,9 @@ impl ChessApp {
         }
         match command {
             Command::Status => (),
+            Command::Action { .. } => {
+                return Err("This command requires the Kirigami interface".into());
+            }
             Command::Move { text } => {
                 if self.game.result() != "*" {
                     return Err("The game has ended".into());
@@ -2390,7 +2393,7 @@ fn symbol(role: Role, color: Color) -> &'static str {
     }
 }
 
-fn notify_end(game: &Game) {
+pub(crate) fn notify_end(game: &Game) {
     if std::env::var_os("CHESS_DISABLE_NOTIFICATIONS").is_some() {
         return;
     }

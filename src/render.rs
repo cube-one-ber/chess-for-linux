@@ -114,8 +114,9 @@ impl View {
     pub fn matrices(&self, aspect: f32) -> (Mat4, Vec3) {
         let yaw = self.yaw.to_radians();
         let tilt = self.elevation.to_radians();
-        let eye =
-            Vec3::new(yaw.sin() * tilt.cos(), tilt.sin(), yaw.cos() * tilt.cos()) * self.distance;
+        let eye = Vec3::new(yaw.sin() * tilt.cos(), tilt.sin(), yaw.cos() * tilt.cos())
+            * self.distance
+            * (1.05 / aspect).max(1.0);
         let vp = Mat4::perspective_rh(40.0f32.to_radians(), aspect, 0.1, 100.0)
             * Mat4::look_at_rh(eye, Vec3::new(0.0, 0.3, 0.0), Vec3::Y);
         (vp, eye)
@@ -514,22 +515,7 @@ impl BoardRenderer {
     pub fn resize(&mut self, size: [u32; 2], state: &eframe::egui_wgpu::RenderState) {
         let size = [size[0].clamp(64, 4096), size[1].clamp(64, 4096)];
         if self.size != size {
-            (
-                self.target,
-                self.view,
-                self.depth,
-                self.msaa,
-                self.reflection,
-            ) = targets(&self.device, size);
-            self.bind = scene_bind(
-                &self.device,
-                &self.layout,
-                &self.uniform,
-                &self.materials_view,
-                &self.sampler,
-                &self.reflection,
-            );
-            self.size = size;
+            self.resize_offscreen(size);
             if let Some(id) = self.texture_id {
                 state
                     .renderer
@@ -550,6 +536,28 @@ impl BoardRenderer {
             ));
         }
     }
+    pub fn resize_offscreen(&mut self, size: [u32; 2]) {
+        let size = [size[0].clamp(64, 4096), size[1].clamp(64, 4096)];
+        if self.size == size {
+            return;
+        }
+        (
+            self.target,
+            self.view,
+            self.depth,
+            self.msaa,
+            self.reflection,
+        ) = targets(&self.device, size);
+        self.bind = scene_bind(
+            &self.device,
+            &self.layout,
+            &self.uniform,
+            &self.materials_view,
+            &self.sampler,
+            &self.reflection,
+        );
+        self.size = size;
+    }
     pub fn render(
         &mut self,
         g: &Game,
@@ -563,7 +571,7 @@ impl BoardRenderer {
         let camera = Camera {
             vp: vp.to_cols_array_2d(),
             eye: eye.extend(1.0).to_array(),
-            background: [0.055, 0.065, 0.077, 1.0],
+            background: [239.0 / 255.0, 235.0 / 255.0, 225.0 / 255.0, 1.0],
             light: [v.light[0], v.light[1], v.light[2], 1.0],
             lighting: [v.ambient, v.reflectivity, v.label_intensity, 0.0],
             viewport: [self.size[0] as f32, self.size[1] as f32, 0.0, 0.0],
@@ -815,9 +823,9 @@ impl BoardRenderer {
                     resolve_target: Some(&self.view),
                     ops: wgpu::Operations {
                         load: wgpu::LoadOp::Clear(wgpu::Color {
-                            r: 0.065,
-                            g: 0.075,
-                            b: 0.086,
+                            r: 239.0 / 255.0,
+                            g: 235.0 / 255.0,
+                            b: 225.0 / 255.0,
                             a: 1.0,
                         }),
                         store: wgpu::StoreOp::Discard,
@@ -848,6 +856,16 @@ impl BoardRenderer {
         self.queue.submit([encoder.finish()]);
     }
     pub fn save_png(&self, path: &std::path::Path) -> Result<(), String> {
+        image::save_buffer(
+            path,
+            &self.pixels()?,
+            self.size[0],
+            self.size[1],
+            image::ColorType::Rgba8,
+        )
+        .map_err(|e| e.to_string())
+    }
+    pub fn pixels(&self) -> Result<Vec<u8>, String> {
         let row = (self.size[0] * 4).div_ceil(256) * 256;
         let buffer = self.device.create_buffer(&wgpu::BufferDescriptor {
             label: Some("Screenshot readback"),
@@ -896,14 +914,7 @@ impl BoardRenderer {
         for line in mapped.chunks(row as usize) {
             bytes.extend_from_slice(&line[..self.size[0] as usize * 4]);
         }
-        image::save_buffer(
-            path,
-            &bytes,
-            self.size[0],
-            self.size[1],
-            image::ColorType::Rgba8,
-        )
-        .map_err(|e| e.to_string())
+        Ok(bytes)
     }
 }
 fn targets(

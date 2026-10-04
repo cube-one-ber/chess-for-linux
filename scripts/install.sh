@@ -11,6 +11,7 @@ install -Dm644 packaging/chess-linux.xml "$chess_install_prefix/share/mime/packa
 install -Dm644 README.linux.md "$chess_install_prefix/share/doc/chess-linux/README.linux.md"
 install -Dm644 LICENSE "$chess_install_prefix/share/licenses/chess-linux/LICENSE"
 install -Dm644 NOTICE "$chess_install_prefix/share/licenses/chess-linux/NOTICE"
+install -Dm644 assets/fonts/LICENSE "$chess_install_prefix/share/licenses/chess-linux/Noto-Fonts-OFL"
 install -Dm644 README "$chess_install_prefix/share/licenses/chess-linux/Apple-Sample-Code-License"
 if command -v update-desktop-database >/dev/null 2>&1; then
     update-desktop-database "$chess_install_prefix/share/applications"

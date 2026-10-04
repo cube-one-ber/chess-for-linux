@@ -1,8 +1,8 @@
 # Chess for Linux
 
-A native Linux rebuild of Apple's Chess application, written in **Rust** with a **Vulkan** 3D renderer. Play against the computer or a friend, explore four chess variants, and customize the board with the original piece geometry and artwork. Runs on **Wayland and X11**.
+A native Linux rebuild of Apple's Chess application, with a **Kirigami** desktop interface, **Rust** game controller and engine, and **Vulkan** 3D renderer. Play against the computer or a friend, explore four chess variants, and customize the board with the original piece geometry and artwork. Runs on **Wayland and X11**.
 
-![Chess for Linux showing a wooden 3D board, move history, and the opening moves e4 and e5](docs/images/chess-3d.png)
+![Kirigami Chess showing its wooden 3D board, player cards and opening move history](docs/images/chess-3d.png)
 
 [Getting started](#getting-started) · [Features](#features) · [Screenshots](#screenshots) · [Controls](#controls) · [Linux guide](README.linux.md) · [Licenses](#licenses-and-origin)
 
@@ -15,7 +15,7 @@ A native Linux rebuild of Apple's Chess application, written in **Rust** with a 
 - **Review and analysis:** move history, hints, undo/redo, comments, and saved alternative continuations.
 - **Game documents:** multiple tabs, recent files, session recovery, native `.chess-linux` saves, Apple `.chess` import/export, and single-game PGN import/export.
 - **Play over TCP:** direct two-player sessions with chat, draw offers, agreed takebacks, and resignation.
-- **Accessible 2D view:** labelled square buttons, keyboard navigation, and AccessKit/AT-SPI support.
+- **Accessible 2D view:** labelled Qt square buttons, keyboard navigation, and Qt accessibility support for Linux screen readers.
 - **Optional extras:** spoken moves, offline microphone input, PNG screenshots, MP4 recording, desktop notifications, and a local JSON scripting interface.
 
 ## Getting started
@@ -23,9 +23,17 @@ A native Linux rebuild of Apple's Chess application, written in **Rust** with a 
 ### Requirements
 
 - Linux with a Wayland or X11 desktop session.
-- Rust **1.95 or newer**, Cargo, a C linker, and Linux window-system libraries.
+- Rust **1.95 or newer**, Cargo, a C++17 compiler and pkg-config.
+- **Qt 6.5 or newer** development packages for Qt Quick, QML and Quick Controls, including `moc` and `rcc`.
+- **KDE Kirigami 6** and **qqc2-desktop-style** QML modules at runtime.
 - A working **Vulkan driver and loader** for your GPU.
-- An XDG desktop portal for native file dialogs.
+- A desktop platform integration or XDG desktop portal for native file dialogs.
+
+On Arch Linux or CachyOS, install the desktop build dependencies with:
+
+```sh
+sudo pacman -S --needed base-devel qt6-base qt6-declarative kirigami qqc2-desktop-style
+```
 
 ### Build and run
 
@@ -36,7 +44,7 @@ cargo build --release --locked
 ./target/release/chess-linux
 ```
 
-The artwork is embedded in the binary. You can also open a saved game directly or start without restoring the previous session:
+The artwork, QML interface and Noto fonts are embedded in the binary; Qt and Kirigami are system dependencies. You can also open a saved game directly or start without restoring the previous session:
 
 ```sh
 ./target/release/chess-linux game.pgn
@@ -56,11 +64,11 @@ See the [Linux guide](README.linux.md) for optional dependencies, file compatibi
 
 ## Screenshots
 
-These captures show the native desktop application: a marble board with metal pieces and appearance controls, and the accessible 2D board with document tabs and move history.
+These captures show the native Kirigami desktop application: material choices in Preferences and the accessible 2D board with player cards and move history.
 
-| Appearance and computer settings | Accessible 2D board |
+| Appearance settings | Accessible 2D board |
 | --- | --- |
-| ![Preferences showing board and piece materials, camera controls, computer settings, and speech options](docs/images/chess-preferences.png) | ![Accessible 2D chessboard with labelled squares, two document tabs, and move history](docs/images/chess-2d.png) |
+| ![Kirigami Preferences showing board and piece material choices and camera controls](docs/images/chess-preferences.png) | ![Accessible 2D chessboard with labelled squares, player cards and move history](docs/images/chess-2d.png) |
 
 ## Controls
 
@@ -117,7 +125,8 @@ Generated verification output goes into the ignored `artifacts/` directory. READ
 
 | Source | Purpose |
 | --- | --- |
-| [`src/app.rs`](src/app.rs) | Desktop interface and application state |
+| [`qml/`](qml/), [`src/kirigami.rs`](src/kirigami.rs), [`native/`](native/) | Kirigami interface, Rust application controller and small Qt bridge |
+| [`src/app.rs`](src/app.rs) | Shared preferences/recovery and optional previous egui interface (`--egui`) |
 | [`src/game.rs`](src/game.rs), [`src/document.rs`](src/document.rs) | Rules, history, and game documents |
 | [`src/engine.rs`](src/engine.rs), [`src/legacy_engine.rs`](src/legacy_engine.rs) | Rust search and optional Sjeng adapter |
 | [`src/render.rs`](src/render.rs), [`src/board.wgsl`](src/board.wgsl) | Vulkan rendering and shaders |
@@ -128,7 +137,8 @@ Generated verification output goes into the ignored `artifacts/` directory. READ
 
 This repository retains the source for Apple's Chess.app 3.0, shipped with Mac OS X 10.8, alongside the Linux rebuild.
 
-- **New Rust application code:** [GNU GPL version 3 or later](LICENSE).
+- **New Rust application, QML interface and Qt bridge:** [GNU GPL version 3 or later](LICENSE).
+- **Bundled Noto fonts:** [SIL Open Font License 1.1](assets/fonts/LICENSE).
 - **Original Apple frontend, artwork, and piece geometry:** Apple Sample Code License, preserved in the original [`README`](README).
 - **Original Sjeng engine:** GNU GPL version 2 or later; see [`sjeng/COPYING`](sjeng/COPYING).
 

@@ -638,9 +638,11 @@ name = "chess-linux"
 version = "0.1.0"
 dependencies = [
  "bytemuck",
+ "cc",
  "eframe",
  "glam",
  "image",
+ "pkg-config",
  "plist",
  "pollster",
  "rfd",

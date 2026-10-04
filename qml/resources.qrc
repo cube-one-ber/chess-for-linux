@@ -1,0 +1,10 @@
+<RCC><qresource prefix="/">
+<file alias="qml/Main.qml">Main.qml</file>
+<file alias="qml/Settings.qml">Settings.qml</file>
+<file alias="qml/SoftButton.qml">SoftButton.qml</file>
+<file alias="qml/PlayerCard.qml">PlayerCard.qml</file>
+<file alias="icons/chess.png">../Resources/Icons/Chess_128x128.png</file>
+<file alias="fonts/NotoSans-Regular.ttf">../assets/fonts/NotoSans-Regular.ttf</file>
+<file alias="fonts/NotoSans-Medium.ttf">../assets/fonts/NotoSans-Medium.ttf</file>
+<file alias="fonts/NotoSerif-Regular.ttf">../assets/fonts/NotoSerif-Regular.ttf</file>
+</qresource></RCC>

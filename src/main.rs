@@ -1,8 +1,11 @@
+#![recursion_limit = "256"]
+
 mod app;
 mod automation;
 mod document;
 mod engine;
 mod game;
+mod kirigami;
 mod legacy_engine;
 mod network;
 mod recording;
@@ -13,7 +16,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = std::env::args().skip(1).collect();
     if args.iter().any(|s| s == "--help" || s == "-h") {
         println!(
-            "Chess for Linux — Rust / Vulkan\n\nUsage: chess-linux [FILE] [--fresh]\n       chess-linux --render-check [OUTPUT.png]\n       chess-linux --gui-smoke\n       chess-linux --analyze FEN [VARIANT]\n       chess-linux --command JSON [--socket PATH]\n\nOpen .chess-linux, Apple .chess or PGN games.\n--fresh skips session recovery. See README.linux.md for setup and controls."
+            "Chess for Linux — Rust / Kirigami / Vulkan\n\nUsage: chess-linux [FILE] [--fresh] [--egui]\n       chess-linux --render-check [OUTPUT.png]\n       chess-linux --gui-smoke\n       chess-linux --analyze FEN [VARIANT]\n       chess-linux --command JSON [--socket PATH]\n\nOpen .chess-linux, Apple .chess or PGN games.\n--fresh skips session recovery.\nKirigami is the default UI; --egui selects the previous interface.\n--gui-smoke checks the egui compatibility interface. See README.linux.md for setup and controls."
         );
         return Ok(());
     }
@@ -54,6 +57,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     let smoke = args.iter().any(|s| s == "--gui-smoke");
     let fresh = smoke || args.iter().any(|s| s == "--fresh");
     let path = args.iter().find(|s| !s.starts_with('-')).map(PathBuf::from);
+    if !smoke && !args.iter().any(|s| s == "--egui") {
+        return kirigami::run(path, fresh);
+    }
     let mut setup = eframe::egui_wgpu::WgpuSetupCreateNew::default();
     setup.instance_descriptor.backends = wgpu::Backends::VULKAN;
     let icon =

@@ -1,10 +1,18 @@
 # Chess for Linux
 
-A native Rust rebuild of the supplied Apple Chess application. Both the desktop interface and the 3D board render through **Vulkan**, using wgpu. Wayland and X11 are supported. The original source, license notices, piece geometry, and artwork are retained.
+A native Linux rebuild of the supplied Apple Chess application. The desktop interface uses **Qt 6 and KDE Kirigami**, with the game controller and engine written in **Rust**. Qt Quick renders the interface through **Vulkan**; wgpu renders the 3D board through Vulkan. Wayland and X11 are supported. The original source, license notices, piece geometry, and artwork are retained.
 
 ## Build and run
 
-Requires Rust **1.95 or newer**, a C linker, Linux window-system libraries, and a working Vulkan driver/loader. The default application and computer engine are Rust; building Sjeng is optional.
+Requires Rust **1.95 or newer**, a C++17 compiler, pkg-config, Qt **6.5 or newer** development packages (Core, Gui, QML, Quick and Quick Controls, including `moc` and `rcc`), and a working Vulkan driver/loader. Install the **Kirigami 6** and **qqc2-desktop-style** QML modules for the interface. Building Sjeng is optional.
+
+On Arch Linux or CachyOS:
+
+```sh
+sudo pacman -S --needed base-devel qt6-base qt6-declarative kirigami qqc2-desktop-style
+```
+
+Other distributions need the equivalent Qt 6 development and KDE QML runtime packages. Qt modules are discovered through pkg-config; `QT_HOST_PATH` can select a Qt installation for its build tools. The [Kirigami setup guide](https://develop.kde.org/docs/getting-started/kirigami/setup-cpp/) describes the KDE/Qt dependencies.
 
 ```sh
 cargo build --release --locked
@@ -25,7 +33,9 @@ Install the binary, desktop launcher, icon, MIME types and documentation into `~
 ./scripts/install.sh
 ```
 
-`PREFIX=/path ./scripts/install.sh` selects another installation prefix. No installation is needed to run the release binary, and its artwork is embedded. Native file dialogs use the XDG desktop portal.
+`PREFIX=/path ./scripts/install.sh` selects another installation prefix. No installation is needed to run the release binary; its artwork, QML files and Noto fonts are embedded. Qt, Kirigami and the desktop controls style remain system dependencies. Native file dialogs use Qt's desktop platform integration, including the XDG portal where available.
+
+The small C++ QObject bridge exposes Rust state and commands to QML. The Rust Vulkan board is read back into an owned RGBA image and supplied to Qt through a `QQuickImageProvider`; Qt then composes it with the interface. This adds a GPU readback/upload per changed board frame. The previous egui interface is available with `--egui`; `--gui-smoke` exercises that compatibility interface.
 
 ## Functionality
 
@@ -43,7 +53,7 @@ Install the binary, desktop launcher, icon, MIME types and documentation into `~
 | Multiple documents | Tabs, duplication, recent files, save/save as, close/save prompts and session recovery |
 | Spoken moves | Optional espeak output with separate voices for White and Black |
 | Spoken input | Optional offline Vosk microphone recognition; the command field accepts the same spoken phrases |
-| Accessibility | A 2D board with separately labelled square buttons and AccessKit/AT-SPI support; keyboard and text controls |
+| Accessibility | A 2D board with separately labelled Qt square buttons and Qt accessibility support; keyboard and text controls |
 | Shared play | Direct two-player TCP sessions, game synchronization, chat, agreed takebacks, draw offers and resignation |
 | Recording | PNG screenshots and optional ffmpeg H.264/MP4 recording of the application, including either board view |
 | Window controls | Resizing, full screen, and floating above other windows |
@@ -119,6 +129,9 @@ Replies contain `ok` and either `data` or `error`. Status includes FEN, variant,
 | `set_view` | `view` object using the fields of `render::View`; omitted fields use defaults |
 | `host`, `join` | `address`, for example `127.0.0.1:7878`; the host can use port `0` and read its assigned address from status |
 | `ask`, `respond` | Respectively `request`: `draw` or `takeback`; `accepted`: boolean |
+| `action` | Kirigami action `name` and optional `data` object; see below |
+
+Kirigami actions include `preferences` (a partial preferences object), `computer` (`computer` booleans), `square` (`square` such as `e2`), `promote` (`role`), `switch`/`close`/`variation` (`index`), `metadata` (header strings), `comment` (`text`), `chat` (`text`), `flip`, `duplicate`, `copy_pgn`, `listen` (`enabled`), `record` (`path`, `size`), `stop_record` and `close_response` (`choice`: `save`, `discard` or `cancel`, optional `path`). `gui` opens a named dialog with `data.action`: `new`, `settings`, `appearance`, `computer`, `speech`, `materials`, `network` or `close_dialogs`. `gui_screenshot` captures the entire window to `path`; `ui_resize` takes `width` and `height`. These use the same private control socket as game commands.
 
 Each instance creates `$XDG_RUNTIME_DIR/chess-linux-control/PID.sock`, with a private directory and a socket accessible only to its owner. If the runtime directory is unavailable, it uses the state directory. With multiple instances, pass `--socket /absolute/path/PID.sock` to target one. The wire format is one JSON request and one JSON reply per connection, each terminated by a newline. Requests run on the application thread and obey legal moves, player turns, pending network offers and unsaved-document prompts. New/open/setup/history commands are disabled during network play; moves, saving and agreed takebacks remain available.
 
@@ -129,12 +142,13 @@ Each instance creates `$XDG_RUNTIME_DIR/chess-linux-control/PID.sock`, with a pr
 CHESS_GUI_CHECK=1 ./scripts/check.sh
 ```
 
-The first command checks formatting, strict Clippy linting, rules/document/network/engine tests, and a real offscreen Vulkan render. The second also launches and closes a native GUI smoke test, verifying moves, undo/redo, variants, document tabs, preferences, the 2D board, screenshots and video recording. It then launches two native instances with isolated settings to verify all four variants over TCP, turn enforcement, pocket drops, accepted takebacks, declined/accepted draws, resignation, save/reopen, scripting and hint search. Existing preferences and recovery files are left untouched. Output is written to the ignored `artifacts/` directory. The GUI checks require a desktop session, Python 3 and ffmpeg with libx264.
+The first command checks formatting, strict Clippy linting, rules/document/network/engine tests, and a real offscreen Vulkan render. The second also exercises a native Kirigami window, verifies its Vulkan scene graph, captures all four settings pages, checks variants, history and saved branches, metadata, computer play, promotion, the 2D board, compact layout, video recording, unsaved-document prompts and clean shutdown, and rejects QML runtime errors. It then launches two native instances with isolated settings to verify all four variants over TCP, turn enforcement, pocket drops, accepted takebacks, declined/accepted draws, resignation, save/reopen, scripting and hint search. Existing preferences and recovery files are left untouched. Output is written to the ignored `artifacts/` directory. The GUI checks require a desktop session, Python 3 and ffmpeg with libx264.
 
 Run the two-instance integration check against a particular build:
 
 ```sh
 python3 scripts/integration_check.py target/release/chess-linux
+python3 scripts/kirigami_check.py target/release/chess-linux
 ```
 
 The optional original engine has a separate integration check:
@@ -159,8 +173,11 @@ The Vulkan render and native GUI have been exercised on an NVIDIA GeForce RTX 40
 - `src/engine.rs`: native Rust iterative alpha-beta search.
 - `src/legacy_engine.rs`: optional original Sjeng process adapter.
 - `src/render.rs`, `src/board.wgsl`: Vulkan board renderer and shaders.
-- `src/app.rs`: native desktop application.
+- `qml/`: Kirigami application, dialogs and reusable interface controls.
+- `src/kirigami.rs`: Rust controller for the Kirigami application.
+- `native/bridge.h`, `native/bridge.cpp`, `build.rs`: Qt/QML bridge and resource build.
+- `src/app.rs`: shared preferences/recovery and previous egui interface.
 - `src/network.rs`, `src/speech.rs`, `src/recording.rs`, `src/automation.rs`: Linux integrations.
 - `assets/*.mesh`: portable triangle buffers derived from the supplied Metal/USD geometry, preserving normals and texture coordinates. Regeneration requires the OpenUSD Python bindings (`pip install usd-core`), then `python scripts/convert_meshes.py`. Normal builds need no USD tools.
 
-New Rust application code is GPL-3.0-or-later, compatible with the GPL-3.0-or-later [shakmaty](https://github.com/niklasf/shakmaty) rules library. Original artwork, geometry and frontend source retain the Apple Sample Code License in the root `README`; original Sjeng retains `sjeng/COPYING`. See `NOTICE` and `LICENSE`. This port is not endorsed by Apple.
+New Rust application, QML interface and Qt bridge code are GPL-3.0-or-later, compatible with the GPL-3.0-or-later [shakmaty](https://github.com/niklasf/shakmaty) rules library. Bundled Noto Sans and Noto Serif fonts use the SIL Open Font License 1.1 in `assets/fonts/LICENSE`; the installer includes that notice. Original artwork, geometry and frontend source retain the Apple Sample Code License in the root `README`; original Sjeng retains `sjeng/COPYING`. See `NOTICE` and `LICENSE`. This port is not endorsed by Apple.
