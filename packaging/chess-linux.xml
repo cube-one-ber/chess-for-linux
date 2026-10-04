@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mime-info xmlns="http://www.freedesktop.org/standards/shared-mime-info">
+  <mime-type type="application/x-chess-linux">
+    <comment>Chess Linux game</comment>
+    <glob pattern="*.chess-linux"/>
+  </mime-type>
+  <mime-type type="application/x-apple-chess">
+    <comment>Apple Chess game</comment>
+    <glob pattern="*.chess"/>
+  </mime-type>
+</mime-info>

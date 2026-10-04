@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=Chess
+Comment=Play chess and variants with a 3D Vulkan board
+Exec=chess-linux %f
+Icon=chess-linux
+Terminal=false
+Categories=Game;BoardGame;
+MimeType=application/x-chess-linux;application/x-apple-chess;text/x-chess-pgn;
+StartupNotify=true

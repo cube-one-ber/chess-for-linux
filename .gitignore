@@ -1,0 +1,4 @@
+/target/
+/artifacts/
+*.chess-linux
+__pycache__/

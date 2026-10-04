@@ -1,0 +1,16 @@
+Chess for Linux
+
+New Rust application code: GNU GPL version 3 or later (LICENSE).
+
+The original Apple Chess frontend source, icons, textures and piece geometry,
+including the derived assets/*.mesh triangle buffers, retain the Apple Sample
+Code License and copyright notices in README and Sources/*. The conversion
+script derives the geometry from Sources/MBCBoardViewModels.mm.
+
+The original Sjeng engine, retained in sjeng/ and optionally run as a separate
+process, is copyright Gian-Carlo Pascutto and contributors, licensed under GNU
+GPL version 2 or later. See sjeng/COPYING, sjeng/AUTHORS and sjeng/README.
+
+The shakmaty rules library is copyright its contributors, licensed under GNU
+GPL version 3 or later. Other Rust dependencies retain their respective
+licenses as declared in their Cargo manifests.

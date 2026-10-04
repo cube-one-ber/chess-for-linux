@@ -1,3 +1,7 @@
+Linux Rust/Vulkan rebuild: see README.linux.md for build instructions,
+features, compatibility details and verification. The original source and
+license notices follow.
+
 This is the source code for Apple's Chess.app Version 3.0, as shipped
 in MacOS X 10.8. This project consists of two components:
 The Chess engine, "sjeng", and the graphical frontend.
