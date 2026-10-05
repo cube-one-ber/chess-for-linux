@@ -28,6 +28,8 @@ packages/chess-wawona/0.1.0/
   component.wasm
   LICENSE
   LICENSE.wawona
+  licenses/                        upstream Rust dependency notices
+  SOURCE.txt                       source revision link
 ```
 
 The fragment contains the actual module's SHA-256 digest, `wasi: p1`,

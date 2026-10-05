@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import re
 import shutil
+import subprocess
 import tomllib
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -47,6 +48,30 @@ def package(output, module, maintainers, source_ref="main"):
     (output / "SHA256SUMS").write_text(f"{digest}  {relative.as_posix()}\n")
     shutil.copyfile(ROOT / "LICENSE", blob.parent / "LICENSE")
     shutil.copyfile(ROOT / "wasm/LICENSE.wawona", blob.parent / "LICENSE.wawona")
+    # Include upstream notices for statically linked Rust dependencies.
+    metadata = json.loads(subprocess.check_output([
+        "cargo", "metadata", "--manifest-path", str(ROOT / "wasm/Cargo.toml"),
+        "--locked", "--format-version", "1", "--filter-platform", "wasm32-wasip1",
+    ], text=True))
+    for dependency in metadata["packages"]:
+        if dependency["source"] is None:
+            continue
+        source = Path(dependency["manifest_path"]).parent
+        notices = [p for p in source.iterdir() if p.is_file() and
+                   p.name.upper().startswith(("LICENSE", "LICENCE", "COPYING"))]
+        destination = blob.parent / "licenses" / f"{dependency['name']}-{dependency['version']}"
+        destination.mkdir(parents=True, exist_ok=True)
+        if not notices:
+            # shakmaty's crates.io archive omits COPYING; its declared license
+            # is the same GPL-3.0-or-later text shipped by this application.
+            if dependency["name"] == "shakmaty" and dependency["license"] == "GPL-3.0-or-later":
+                shutil.copyfile(ROOT / "LICENSE", destination / "LICENSE")
+                shutil.copyfile(source / "README.md", destination / "README.md")
+            else:
+                raise ValueError(f"No license notice found for {dependency['name']}")
+        for notice in notices:
+            shutil.copyfile(notice, destination / notice.name)
+    (blob.parent / "SOURCE.txt").write_text(row["source"] + "\n")
     shutil.copyfile(ROOT / "wasm/README.md", output / "README.md")
     print(f"Wawona catalog fragment: {output / 'index.json'}")
     print(f"WASI module: {blob} (sha256:{digest})")
