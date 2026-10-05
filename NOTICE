@@ -22,3 +22,7 @@ GPL version 2 or later. See sjeng/COPYING, sjeng/AUTHORS and sjeng/README.
 The shakmaty rules library is copyright its contributors, licensed under GNU
 GPL version 3 or later. Other Rust dependencies retain their respective
 licenses as declared in their Cargo manifests.
+
+The Wawona WASI frontend's Wayland transport and bitmap font are adapted from
+Alex Spaulding's MIT-licensed Wawona wayland-shm example. The original notice
+is preserved in wasm/LICENSE.wawona; see wasm/README.md for the pinned source.

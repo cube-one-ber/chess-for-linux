@@ -1,0 +1,2 @@
+# ABI integration test runner; not a runtime dependency of the package.
+wasmtime==49.0.0

@@ -1,4 +1,6 @@
 /target/
+/wasm/target/
 /artifacts/
 *.chess-linux
 __pycache__/
+/.venv/

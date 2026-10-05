@@ -1,5 +1,7 @@
 # Chess for Linux
 
+[![Build and test](https://github.com/cube-one-ber/chess-for-linux/actions/workflows/ci.yml/badge.svg)](https://github.com/cube-one-ber/chess-for-linux/actions/workflows/ci.yml)
+
 A native Linux rebuild of Apple's Chess application, with a **Kirigami** desktop interface, **Rust** game controller and engine, and **Vulkan** 3D renderer. Play against the computer or a friend, explore four chess variants, and customize the board with the original piece geometry and artwork. Runs on **Wayland and X11**.
 
 ![Kirigami Chess showing its wooden 3D board, player cards and opening move history](docs/images/chess-3d.png)
@@ -102,6 +104,25 @@ Open **Preferences** to change materials, switch to the 2D board, choose compute
 The built-in Rust engine, board play, and document handling work without these optional integrations. Direct TCP play connects Linux instances; it does not connect to Apple's SharePlay or Game Center services.
 
 ## Development and verification
+
+GitHub Actions automatically checks and builds the native Linux application
+and a [WASI Wayland frontend for Wawona](wasm/README.md) on pushes and pull
+requests. Each successful build uploads downloadable packages. The wasm
+artifact includes the module, licenses and a SHA-256 catalog fragment for
+submission to `repo.wawona.io/wasm`. Matching `v<VERSION>` tags publish release
+archives after verification. The native archive requires the Qt/Kirigami and
+Vulkan system dependencies listed above.
+
+Build the Wawona package locally with:
+
+```sh
+rustup target add wasm32-wasip1
+./scripts/build-wasm.sh
+```
+
+Its 2D frontend supports all four variants, pointer/touch input, typed moves,
+promotion, history and the Rust engine. See the [Wawona guide](wasm/README.md)
+for runtime instructions, feature limits and catalog submission.
 
 Run the standard checks:
 
